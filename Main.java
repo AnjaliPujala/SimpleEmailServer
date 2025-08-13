@@ -1,41 +1,74 @@
+
+// This code is a simple email server implementation in Java that allows user registration and sending emails.
+// It creates user directories, stores credentials, and manages email sending between users.
 import java.util.*;
+
 import java.io.*;
 import java.net.*;
 
-class SimpleEmailServer{
+// User class
+class User {
+    private String name;
+    private String email;
+    private String password;
 
-    public void registerUser(User user){
-        try{
-            File folder=new File("users\\"+user.name);
-            
-            if(!folder.exists()){     
-                folder.mkdirs();
-                File inbox=new File(folder+"\\inbox");
-                inbox.createNewFile();
-                File sent=new File(folder+"\\sent");
-                sent.createNewFile();
-                File file=new File("credentials.txt");
-                file.createNewFile();
-                BufferedWriter writer=new BufferedWriter(new FileWriter(file,true));
-                writer.write(user.getUser());
-                writer.newLine();
-                writer.flush();
-                writer.close();
-                
-                System.out.println("User added successfully!");
-             
-            }else{
-                System.out.println("User name already exists");
-            }
-            
-        }catch(Exception e){
-            System.out.println("Exception while adding user: "+e);
-        }
+    public User(String name, String email, String password) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
     }
-    private void addTextIntoFiles(BufferedWriter writer, User sender, User reciever, String subject, String body) throws Exception{
-        writer.write(sender.name);
+
+    public String getName() {
+        return name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+}
+
+// Database wrapper class
+class DatabaseCopy {
+    private Database database;
+
+    public DatabaseCopy(Database database) {
+        this.database = database;
+    }
+
+    public void registerUser(User user) {
+        database.addUser(user.getName(), user.getEmail(), user.getPassword());
+    }
+
+    public boolean userExists(String email) {
+        return database.userExists(email);
+    }
+
+    public boolean validateLogin(String email, String password) {
+        return database.validateLogin(email, password);
+    }
+
+    public void sendMail(String sender, String receiver, String subject, String message) {
+        database.sendEmail(sender, receiver, subject, message);
+    }
+}
+
+// Email server class with Dependency Injection
+class SimpleEmailServer {
+    private DatabaseCopy db;
+
+    public SimpleEmailServer(DatabaseCopy db) {
+        this.db = db;
+    }
+
+    private void addTextIntoFiles(BufferedWriter writer, String sender, String receiver, String subject, String body)
+            throws IOException {
+        writer.write(sender);
         writer.newLine();
-        writer.write(reciever.name);
+        writer.write(receiver);
         writer.newLine();
         writer.write(subject);
         writer.newLine();
@@ -43,48 +76,86 @@ class SimpleEmailServer{
         writer.newLine();
         writer.newLine();
     }
-    public void sendEmail(User sender, User reciever, String subject, String body){
-        try{
-            Socket socket=new Socket("localhost",5000);
-            BufferedWriter writer=new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            addTextIntoFiles(writer,sender,reciever,subject,body);
+
+    public void sendEmail(String sender, String receiver, String subject, String body) {
+        try {
+            Socket socket = new Socket("localhost", 5000);
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            addTextIntoFiles(writer, sender, receiver, subject, body);
             writer.flush();
             writer.close();
-            File sent=new File("users\\"+sender.name+"\\sent");
-            sent.createNewFile();
-            BufferedWriter fileWriter=new BufferedWriter(new FileWriter(sent,true));
-            addTextIntoFiles(fileWriter,sender,reciever,subject,body);
-            fileWriter.flush();
-            fileWriter.close();
 
+            db.sendMail(sender, receiver, subject, body);
             socket.close();
-            System.out.println("Email sent to "+reciever+" successfully..!");
-        }catch(Exception e){
-            System.out.println("Error occured: "+e);
+            System.out.println("Email sent to " + receiver + " successfully!");
+        } catch (Exception e) {
+            System.out.println("Error occurred: " + e);
         }
     }
 }
 
-class User{
-    String name;
-    String password;
-    User(String name, String password){
-        this.name=name;
-        this.password=password;
+// Main class
+public class Main {
+
+    private static final Scanner sc = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        Database database = new Database();
+        DatabaseCopy dbCopy = new DatabaseCopy(database);
+        SimpleEmailServer emailServer = new SimpleEmailServer(dbCopy);
+
+        System.out.println("What do you want to do? (register/send)");
+        String action = sc.next();
+
+        if (action.equalsIgnoreCase("register")) {
+            handleRegistration(dbCopy);
+        } else if (action.equalsIgnoreCase("send")) {
+            handleSendEmail(dbCopy, emailServer);
+        } else {
+            System.out.println("Invalid option!");
+        }
+
+        database.close();
+        sc.close();
     }
 
-    public String getUser(){
-        return name+","+password;
-    }
-}
+    private static void handleRegistration(DatabaseCopy dbCopy) {
+        System.out.println("Enter your name:");
+        String name = sc.next();
+        System.out.println("Enter your email:");
+        String email = sc.next();
+        System.out.println("Enter your password:");
+        String password = sc.next();
 
-public class Main{
-    public static void main(String[] args){
-        SimpleEmailServer emailServer=new SimpleEmailServer();
-        User sender=new User("Anjali","anjali123");
-        emailServer.registerUser(sender);
-        User receiver=new User("Nidhi","nidhi123");
-        emailServer.registerUser(receiver);
-        emailServer.sendEmail(sender, receiver, "Greetings", "Hello Nidhi, how are you?");
+        User user = new User(name, email, password);
+        dbCopy.registerUser(user);
+    }
+
+    private static void handleSendEmail(DatabaseCopy dbCopy, SimpleEmailServer emailServer) {
+        System.out.println("Enter your email:");
+        String email = sc.next();
+        System.out.println("Enter your password:");
+        String password = sc.next();
+
+        if (!dbCopy.validateLogin(email, password)) {
+            System.out.println("You haven't registered!");
+            return;
+        }
+
+        System.out.println("Enter receiver's email:");
+        String receiver = sc.next();
+        if (!dbCopy.userExists(receiver)) {
+            System.out.println("This user doesn't exist in our database!");
+            return;
+        }
+
+        sc.nextLine();
+        System.out.println("Enter subject:");
+        String subject = sc.nextLine();
+        System.out.println("Enter message:");
+        String message = sc.nextLine();
+
+        System.out.println("Email sending..!");
+        emailServer.sendEmail(email, receiver, subject, message);
     }
 }

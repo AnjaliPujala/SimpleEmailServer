@@ -1,4 +1,4 @@
-name: SimpleEmailServer build
+name: SimpleEmailServer Build & Run
 on: push
 
 jobs:
@@ -14,15 +14,18 @@ jobs:
         with:
           java-version: 17
           distribution: 'temurin'
-          java-package: jdk
-          check-latest: false
-          server-id: github
-          server-username: ${{ secrets.GITHUB_ACTOR }}
-          server-password: ${{ secrets.GITHUB_TOKEN }}
-          overwrite-settings: true
 
-      - name: Build with javac
-        run: javac Main.java
+      - name: Download SQLite JDBC Driver
+        run: |
+          wget https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.41.2.1/sqlite-jdbc-3.41.2.1.jar -O sqlite-jdbc.jar
 
-      - name: Run Java program
-        run: java Main
+      - name: Compile Java files
+        run: javac -cp .:sqlite-jdbc.jar *.java
+
+      - name: Start Email Receiver Server
+        run: |
+          nohup java -cp .:sqlite-jdbc.jar EmailReceiverServer > server.log 2>&1 &
+          sleep 3
+
+      - name: Run Main Client Program
+        run: java -cp .:sqlite-jdbc.jar Main

@@ -1,26 +1,29 @@
+
+
 # SimpleEmailServer
 
-A simple client-server based email simulation system built using **Java**, demonstrating **TCP/IP socket programming**, **Object-Oriented Programming (OOP)**, and **File I/O operations**. The project allows users to register, login, and send emails, which are stored in file-based inboxes.
+A simple client-server based email simulation system built using **Java**, demonstrating **TCP/IP socket programming**, **Object-Oriented Programming (OOP)**, **Dependency Injection**, and **Database operations (SQLite)**. The project allows users to register, login, and send emails, which are stored in a database.
 
 ---
 
 ## Features
 
-- **Send and receive emails** using a TCP/IP-based custom protocol.
-- **User registration and login** (username & password) handled via files.
-- **Inbox management** using file system storage (no database used).
-- **Modular code structure** with OOP principles.
+* **Send and receive emails** using a TCP/IP-based custom protocol.
+* **User registration and login** stored in an SQLite database.
+* **Inbox and Sent email management** using database tables.
+* **Modular code structure** with OOP principles and dependency injection.
 
 ---
 
 ## Technologies Used
 
-| Technology          | Purpose                                               |
-|---------------------|-------------------------------------------------------|
-| **Java**            | Core programming language                             |
-| **TCP/IP Sockets**  | Network communication between client and server       |
-| **File I/O**        | Reading/writing user credentials and emails           |
-| **OOP Concepts**    | Encapsulation, modular design, class-based structure  |
+| Technology               | Purpose                                              |
+| ------------------------ | ---------------------------------------------------- |
+| **Java**                 | Core programming language                            |
+| **TCP/IP Sockets**       | Network communication between client and server      |
+| **SQLite**               | Database to store user credentials and emails        |
+| **OOP Concepts**         | Encapsulation, modular design, class-based structure |
+| **Dependency Injection** | Decoupling email server from database instance       |
 
 ---
 
@@ -30,34 +33,42 @@ A simple client-server based email simulation system built using **Java**, demon
 SimpleEmailServer/
 │
 ├── src/
-│   ├── EmailReceiverServer.java    # TCP Server to receive emails and store them
-│   ├── EmailClientSender.java      # TCP Client to send emails
-│  
+│   ├── Main.java                 # Client CLI to register, login, and send emails
+│   ├── SimpleEmailServer.java    # Handles sending emails via TCP socket
+│   ├── User.java                 # User model
+│   ├── Database.java             # SQLite DB handler
+│   ├── DatabaseCopy.java         # Wrapper for Database with DI
+│   └── EmailReceiverServer.java  # TCP Server to receive emails and store them
 │
-├── users/
-│   ├── [username]/
-│   │   └── inbox                   # Text file storing received emails
-│   └── [username]/
-│       └── inbox                   # Inbox for each registered user
+├── users.db                      # SQLite database storing credentials & emails
 │
-├──....
+└── ...
 ```
 
 ---
 
 ## How It Works
 
-1. **Registration**  
-   - User registers with a name and password.  
-   - Credentials are saved in a file named `credentials.txt`.
+1. **Registration**
 
-3. **Sending an Email**  
-   - Client collects `from`, `to`, `subject`, and `body` fields.  
-   - Sends data using a TCP socket to the server.
+   * User registers with name, email, and password.
+   * Credentials are stored in the SQLite database.
 
-4. **Receiving an Email**  
-   - Server listens on port 5000.  
-   - Accepts email data and stores it in the `to` user’s inbox file.
+2. **Sending an Email**
+
+   * Client collects `from`, `to`, `subject`, and `body`.
+   * Sends data using a TCP socket to the server.
+   * Email is inserted into **Sent** table and delivered to the receiver.
+
+3. **Receiving an Email**
+
+   * Server listens on port 5000.
+   * Accepts email data from client and stores it in the **Inbox** table of the database.
+
+4. **Dependency Injection**
+
+   * `SimpleEmailServer` receives a `DatabaseCopy` instance via its constructor.
+   * Promotes loose coupling and easier testing.
 
 ---
 
@@ -65,14 +76,14 @@ SimpleEmailServer/
 
 ### Prerequisites
 
-- Java JDK 8 or higher installed.
-- VS Code.
+* Java JDK 8 or higher installed.
+* VS Code or any Java IDE.
+* SQLite (optional, if you want to inspect the database).
 
 ### Compile
 
 ```bash
-javac EmailReceiverServer.java
-javac Main.java
+javac *.java
 ```
 
 ### Run the Server
@@ -89,23 +100,21 @@ java Main
 
 ---
 
-## Example Inbox Output
+## Example Inbox Output (Database Query)
 
-Example contents of `users/Anjali/inbox` after receiving an email:
+Querying the **Inbox** table after sending an email:
 
-```
-From: Anjali
-To: Nidhi
-Subject: Greetings
-Hello Nidhi, hope you're doing well!
-```
+| mail\_from | name  | subject   | message                        |
+| ---------- | ----- | --------- | ------------------------------ |
+| Anjali     | Nidhi | Greetings | Hello Nidhi, hope you're well! |
 
 ---
 
 ## Notes
 
-- This is a simulation and does not send real emails.
-- Data is stored in plain text for simplicity.
+* This is a simulation and does not send real emails over the internet.
+* All data is stored in a local SQLite database.
+* Demonstrates **TCP/IP networking**, **OOP**, and **Dependency Injection** concepts.
 
 ---
 

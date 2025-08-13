@@ -1,0 +1,4 @@
+register
+Anjali
+anjali@example.com
+password123

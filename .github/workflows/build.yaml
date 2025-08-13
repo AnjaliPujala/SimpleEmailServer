@@ -28,4 +28,4 @@ jobs:
           sleep 3
 
       - name: Run Main Client Program
-        run: java -cp .:sqlite-jdbc.jar Main
+        run: java -cp .:sqlite-jdbc.jar Main < input.txt

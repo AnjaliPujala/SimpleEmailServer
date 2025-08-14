@@ -1,0 +1,31 @@
+name: SimpleEmailServer Build & Run
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: 'temurin'
+
+      - name: Download SQLite JDBC Driver
+        run: |
+          wget https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.41.2.1/sqlite-jdbc-3.41.2.1.jar -O sqlite-jdbc.jar
+
+      - name: Compile Java files
+        run: javac -cp .:sqlite-jdbc.jar *.java
+
+      - name: Start Email Receiver Server
+        run: |
+          nohup java -cp .:sqlite-jdbc.jar EmailReceiverServer > server.log 2>&1 &
+          sleep 3
+
+      - name: Run Main Client Program
+        run: java -cp .:sqlite-jdbc.jar Main < input.txt

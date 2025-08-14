@@ -23,8 +23,4 @@ public class EmailReceiverServer {
             System.out.println("Error occurred on receiver side: " + e);
         }
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 5d34e8d7758806a5700f0e8e7ee3e54dc8d2064e

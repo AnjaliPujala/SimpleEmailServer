@@ -92,7 +92,6 @@ class SimpleEmailServer {
             System.out.println("Error occurred: " + e);
         }
     }
-<<<<<<< HEAD
 
     public String generateEmailBody(String subject) {
         String body = "";
@@ -128,8 +127,6 @@ class SimpleEmailServer {
 
         return body;
     }
-=======
->>>>>>> 5d34e8d7758806a5700f0e8e7ee3e54dc8d2064e
 }
 
 // Main class
@@ -190,7 +187,6 @@ public class Main {
         sc.nextLine();
         System.out.println("Enter subject:");
         String subject = sc.nextLine();
-<<<<<<< HEAD
         String body = emailServer.generateEmailBody(subject);
         if (!body.equals("not found")) {
             System.out.println("Generated email body: " + body);
@@ -205,12 +201,5 @@ public class Main {
         }
         System.out.println("Email sending..!");
         emailServer.sendEmail(email, receiver, subject, body);
-=======
-        System.out.println("Enter message:");
-        String message = sc.nextLine();
-
-        System.out.println("Email sending..!");
-        emailServer.sendEmail(email, receiver, subject, message);
->>>>>>> 5d34e8d7758806a5700f0e8e7ee3e54dc8d2064e
     }
 }
